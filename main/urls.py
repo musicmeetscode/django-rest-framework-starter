@@ -45,5 +45,7 @@ urlpatterns = [
     path('redoc', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('admin/', admin.site.urls),
     path('user/', include('accounts.urls')),
-    path('social_auth/', include(('social_auth.urls', 'social_auth'), namespace='social_auth'))
-]
+  ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

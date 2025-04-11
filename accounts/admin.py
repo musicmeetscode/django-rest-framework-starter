@@ -2,18 +2,16 @@ from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
 from . import models
-
+from import_export.admin import ImportExportModelAdmin
 # Register your models here.
 user = get_user_model()
 
 
-class AccessTokensAdmin(admin.ModelAdmin):
-    list_display = ['id', 'user_id', 'access_token', 'created_at', 'expired_at']
+class UserModelAdmin(ImportExportModelAdmin):
+
+    list_display = ('full_name',  'email', 'auth_provider', 'photo', 'is_staff', 'is_active')
+    list_filter = ('full_name',  'email', 'is_staff', 'is_active')
+    search_fields = ('full_name',  'email',   'is_staff', 'is_active')
 
 
-class RefreshTokensAdmin(admin.ModelAdmin):
-    list_display = ['id', 'refresh_token', 'access_token_id', 'created_at', 'expired_at']
-
-
-# admin.site.unregister(Group)
-admin.site.register(user)
+admin.site.register(user,UserModelAdmin)

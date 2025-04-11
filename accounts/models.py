@@ -1,8 +1,8 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
-from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager,PermissionsMixin
 from django.utils.translation import gettext_lazy as _
-
+from django.db.models import Q
+from uuid import uuid4
 
 class UserManager(BaseUserManager):
 
@@ -58,7 +58,7 @@ class UserManager(BaseUserManager):
 AUTH_PROVIDERS = {'facebook': 'facebook', 'google': 'google', 'twitter': 'twitter', 'email': 'email'}
 
 
-class User(AbstractBaseUser):
+class CustomUser(AbstractBaseUser,PermissionsMixin):
 
     ACTIVE = 'active'
     INACTIVE = 'inactive'
@@ -79,6 +79,7 @@ class User(AbstractBaseUser):
     updated_at = models.DateTimeField(auto_now_add=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    is_superuser = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
 
@@ -96,7 +97,7 @@ class User(AbstractBaseUser):
         return self.email
 
     def get_short_name(self):
-        return self.email
+        return self.full_name
 
     def has_perm(self, perm, obj=None):
         return self.is_admin
@@ -114,9 +115,25 @@ class User(AbstractBaseUser):
             'full_name': self.full_name
         }
 
-    def tokens(self):
-        refresh = RefreshToken.for_user(self)
-        return {
-            'refresh': str(refresh),
-            'access': str(refresh.access_token)
-        }
+
+# Contains extra fields for the user separate from auth (auth provider will tell us how they signed up)
+class ModelManager(models.Manager):
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.exclude(Q(active=False) | Q(deleted=True))
+
+class BaseModel(models.Model):
+    objects = ModelManager()
+    uuid = models.UUIDField(default=uuid4,max_length=250,)
+    created_at = models.DateTimeField(auto_created=True, null=True, auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
+    deleted = models.BooleanField(default=False)
+    active = models.BooleanField(default=True)
+
+    def delete(self, using=None, keep_parents=False):
+        self.deleted = True
+        self.active = False
+        self.save()
+
+    class Meta:
+        abstract = True
