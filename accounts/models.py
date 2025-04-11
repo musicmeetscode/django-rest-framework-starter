@@ -137,3 +137,13 @@ class BaseModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+class ErrorLog(models.Model):
+    level = models.CharField(max_length=50)
+    message = models.TextField()
+    details = models.TextField(blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"[{self.level}] {self.timestamp}: {self.message[:50]}"

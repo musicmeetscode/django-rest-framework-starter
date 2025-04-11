@@ -15,3 +15,4 @@ class UserModelAdmin(ImportExportModelAdmin):
 
 
 admin.site.register(user,UserModelAdmin)
+admin.site.register(models.ErrorLog)
