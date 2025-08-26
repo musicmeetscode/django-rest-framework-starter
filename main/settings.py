@@ -62,6 +62,7 @@ SWAGGER_SETTINGS = {
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -111,7 +112,7 @@ DATABASES = {
 }
 REST_FRAMEWORK = {
 
-    'EXCEPTION_HANDLER': 'api.utils.custom_exception_handler',
+    'EXCEPTION_HANDLER': 'accounts.utils.custom_exception_handler',
     "DEFAULT_PARSER_CLASSES": [
         "rest_framework.parsers.JSONParser",
         "rest_framework.parsers.FormParser",
@@ -201,3 +202,4 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
 IMPORT_EXPORT_SKIP_ADMIN_LOG = True
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

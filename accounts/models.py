@@ -124,6 +124,7 @@ class ModelManager(models.Manager):
 
 class BaseModel(models.Model):
     objects = ModelManager()
+    all_objects = models.Manager()
     uuid = models.UUIDField(default=uuid4,max_length=250,)
     created_at = models.DateTimeField(auto_created=True, null=True, auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True, null=True)
