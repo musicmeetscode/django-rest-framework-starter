@@ -27,10 +27,6 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = str(os.environ.get('DEBUG')) == "1"  # 1 == True
 
-ALLOWED_HOSTS = []
-if not DEBUG:
-    ALLOWED_HOSTS += [os.environ.get('ALLOWED_HOSTS')]
-
 
 # Application definition
 
@@ -173,18 +169,18 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 EMAIL_PORT = os.environ.get('EMAIL_PORT')
 
-# CORS
-# If this is used then `CORS_ORIGIN_WHITELIST` will not have any effect
-CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_CREDENTIALS = True
-# CORS_ORIGIN_WHITELIST = [
-#     'http://localhost:3000',
-# ] # If this is used, then not need to use `CORS_ORIGIN_ALLOW_ALL = True`
-# CORS_ORIGIN_REGEX_WHITELIST = [
-#     'http://localhost:3000',
-# ]
+# Get the value from the environment variable, defaulting to an empty string
+allowed_hosts_str = os.environ.get('ALLOWED_HOSTS', '')
 
+# Split the string into a list, only if the string is not empty
+ALLOWED_HOSTS = allowed_hosts_str.split(',') if allowed_hosts_str else []
 
+# Do the same for CORS and CSRF settings
+allowed_origins_str = os.environ.get('CORS_ALLOWED_ORIGINS', '')
+CORS_ALLOWED_ORIGINS = allowed_origins_str.split(',') if allowed_origins_str else []
+
+trusted_origins_str = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
+CSRF_TRUSTED_ORIGINS = trusted_origins_str.split(',') if trusted_origins_str else []
 JAZZMIN_SETTINGS = {
     # title of the window (Will default to current_admin_site.site_title if absent or None)
     "site_title": os.environ.get('SITE_NAME'), "user_avatar": None,
