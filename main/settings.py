@@ -21,8 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    'SECRET_KEY', '%8lx6^a%z&a%2oz&@o@(wtin3kw32$ggtpuhd**)8kcph9eq')
+SECRET_KEY = os.environ.get('SECRET_KEY')
+
+# In development, you can set this in your .env file
+# For production, it MUST be set as an environment variable
+if not SECRET_KEY:
+    raise ValueError("No SECRET_KEY set for Django application")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = str(os.environ.get('DEBUG')) == "1"  # 1 == True
@@ -59,7 +63,7 @@ SWAGGER_SETTINGS = {
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-     'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -116,8 +120,7 @@ REST_FRAMEWORK = {
         "rest_framework.parsers.MultiPartParser",
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
-        # Add other authentication classes as needed
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
 }
 
@@ -178,10 +181,12 @@ ALLOWED_HOSTS = allowed_hosts_str.split(',') if allowed_hosts_str else []
 
 # Do the same for CORS and CSRF settings
 allowed_origins_str = os.environ.get('CORS_ALLOWED_ORIGINS', '')
-CORS_ALLOWED_ORIGINS = allowed_origins_str.split(',') if allowed_origins_str else []
+CORS_ALLOWED_ORIGINS = allowed_origins_str.split(
+    ',') if allowed_origins_str else []
 
 trusted_origins_str = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
-CSRF_TRUSTED_ORIGINS = trusted_origins_str.split(',') if trusted_origins_str else []
+CSRF_TRUSTED_ORIGINS = trusted_origins_str.split(
+    ',') if trusted_origins_str else []
 JAZZMIN_SETTINGS = {
     # title of the window (Will default to current_admin_site.site_title if absent or None)
     "site_title": os.environ.get('SITE_NAME'), "user_avatar": None,
