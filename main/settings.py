@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'accounts',
     "rest_framework",
     "rest_framework.authtoken", 'import_export',
+    'api'
 ]
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
