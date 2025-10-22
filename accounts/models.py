@@ -93,6 +93,7 @@ class CustomUser(AbstractBaseUser,PermissionsMixin):
 
     objects = UserManager()
 
+    all_objects = models.Manager()
     def __str__(self):
         return self.email
 

@@ -45,7 +45,6 @@ class Util:
         except Exception as err:
             print(f"raised error while sending email: {err}")
 
-
 def custom_exception_handler(exc, context):
     response = exception_handler(exc, context)
 
@@ -53,45 +52,55 @@ def custom_exception_handler(exc, context):
     result = {
         "error": True,
         "errors": [],
-        "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR,  # Default status code
+        "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
     }
 
-    # Details to log in the ErrorLog model
-    error_level = "ERROR"  # Default log level
+    error_level = "ERROR"
     error_message = str(exc)
     error_details = ""
 
     if response is not None:
-        # Use the status code from the default response
         result['status_code'] = response.status_code
+        error_details = response.data
 
-        # Extract errors from response data
         if isinstance(response.data, dict):
             for key, value in response.data.items():
                 if isinstance(value, list):
                     for msg in value:
-                        result['errors'].append(f"The {key} is {msg.lower()}.")
+                        # ** THE FIX IS HERE **
+                        # Check if msg is a string before calling .lower()
+                        if isinstance(msg, str):
+                            result['errors'].append(
+                                f"The {key} is {msg.lower()}.")
+                        else:
+                            # If not a string, convert it to one
+                            result['errors'].append(
+                                f"The {key} has an issue: {str(msg)}")
                 else:
-                    result['errors'].append(value)
-            error_details = response.data
+                    # Handle non-list values (like single strings or other objects)
+                    result['errors'].append(str(value))
         else:
-            result['errors'].append(response.data)
-            error_details = response.data
+            result['errors'].append(str(response.data))
 
     else:
-        # Handle exceptions not processed by DRF's default exception handler
+        # Handle exceptions not processed by DRF's default handler
+        error_details = str(exc)  # Default details
         if isinstance(exc, ValidationError):
-            for field, errors in exc.detail.items():
-                for msg in errors:
-                    result['errors'].append(f"The {field} is {msg.lower()}.")
             error_details = exc.detail
+            if isinstance(exc.detail, dict):
+                for field, errors in exc.detail.items():
+                    for msg in errors:
+                        if isinstance(msg, str):
+                            result['errors'].append(
+                                f"The {field} is {msg.lower()}.")
+                        else:
+                            result['errors'].append(
+                                f"The {field} has an issue: {str(msg)}")
+            else:
+                result['errors'].append(str(exc.detail))
         elif isinstance(exc, IntegrityError):
             error_message = "Email/Phone number already exists. Please check and try again."
             result['errors'].append(error_message)
-        elif isinstance(exc, dict):
-            for key, value in exc.items():
-                result['errors'].append(f"The {key} is {value.lower()}.")
-            error_details = exc
         else:
             result['errors'].append(str(exc))
 
@@ -104,8 +113,6 @@ def custom_exception_handler(exc, context):
             timestamp=now()
         )
     except Exception as log_exc:
-        # Avoid disrupting the exception handler due to logging errors
         print(f"Error logging failed: {log_exc}")
 
-    # Return a DRF Response with the structured error data
     return Response(result, status=result["status_code"])
