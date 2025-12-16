@@ -666,3 +666,7 @@ MigrationBackup/
 # Static file
 static/*
 user_images/*
+
+# Ignore migrations but keep __init__.py
+**/migrations/*
+!**/migrations/__init__.py

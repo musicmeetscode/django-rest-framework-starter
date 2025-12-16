@@ -166,12 +166,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 
-# email confirmation
-EMAIL_HOST = os.environ.get('EMAIL_HOST')
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
-EMAIL_PORT = os.environ.get('EMAIL_PORT')
+
 
 # Get the value from the environment variable, defaulting to an empty string
 allowed_hosts_str = os.environ.get('ALLOWED_HOSTS', '')
@@ -205,3 +200,15 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
 IMPORT_EXPORT_SKIP_ADMIN_LOG = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Testing email on the consoloe
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
+# # email confirmation
+# EMAIL_HOST = os.environ.get('EMAIL_HOST')
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+# EMAIL_PORT = os.environ.get('EMAIL_PORT')
