@@ -11,8 +11,9 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
-import datetime
 import os
+import datetime
+import dj_database_url
 from pathlib import Path
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -105,12 +106,26 @@ WSGI_APPLICATION = 'main.wsgi.application'
 #         'PORT': os.environ.get('DB_PORT')
 #     }
 # }
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+DB_CHOICE = os.environ.get("DB_CHOICE", default="sqlite")
+if DB_CHOICE == "sqlite":
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+
+elif DB_CHOICE == "postgres":
+
+    DATABASES = {
+        'default': dj_database_url.config(
+            default='postgresql://neondb_owner:npg_ltKO5qAWF1VN@ep-morning-truth-aj75ji9f-pooler.c-3.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
+            conn_max_age=600
+        )
+    }
+
+else:
+    raise ValueError(f"Unsupported DB_CHOICE: {DB_CHOICE}")
 REST_FRAMEWORK = {
 
     'EXCEPTION_HANDLER': 'accounts.utils.custom_exception_handler',
@@ -120,6 +135,7 @@ REST_FRAMEWORK = {
         "rest_framework.parsers.MultiPartParser",
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        'rest_framework.authentication.TokenAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
 }
@@ -212,3 +228,14 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 # EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 # EMAIL_PORT = os.environ.get('EMAIL_PORT')
+
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+MIGRATION_MODULES = {
+    'accounts': "migrations.accounts",
+    'api': "migrations.api",
+}
