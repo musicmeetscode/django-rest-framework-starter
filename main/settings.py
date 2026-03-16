@@ -119,7 +119,7 @@ elif DB_CHOICE == "postgres":
 
     DATABASES = {
         'default': dj_database_url.config(
-            default='postgresql://neondb_owner:npg_ltKO5qAWF1VN@ep-morning-truth-aj75ji9f-pooler.c-3.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
+            default='neonline',
             conn_max_age=600
         )
     }
@@ -182,8 +182,6 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 
-
-
 # Get the value from the environment variable, defaulting to an empty string
 allowed_hosts_str = os.environ.get('ALLOWED_HOSTS', '')
 
@@ -230,7 +228,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_PORT = os.environ.get('EMAIL_PORT')
 
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
-CELERY_RESULT_BACKEND = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://redis:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'

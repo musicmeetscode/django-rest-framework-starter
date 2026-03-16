@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager,PermissionsMixin
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
+from rest_framework_simplejwt.tokens import RefreshToken
 from uuid import uuid4
 
 class UserManager(BaseUserManager):
@@ -85,6 +86,7 @@ class CustomUser(AbstractBaseUser,PermissionsMixin):
 
     auth_id = models.TextField(null=True, blank=True)
     auth_provider = models.CharField(max_length=255, blank=False, null=False, default=AUTH_PROVIDERS.get('email'))
+    deleted = models.BooleanField(default=False)
 
     status = models.CharField(max_length=32, choices=STATUS, default=ACTIVE)
 
@@ -114,6 +116,13 @@ class CustomUser(AbstractBaseUser,PermissionsMixin):
             'user_id': self.id,
             'email': self.email,
             'full_name': self.full_name
+        }
+
+    def tokens(self):
+        refresh = RefreshToken.for_user(self)
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token)
         }
 
 

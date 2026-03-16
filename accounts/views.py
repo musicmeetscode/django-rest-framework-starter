@@ -1,8 +1,7 @@
 # from django.core.exceptions import ValidationError
 from rest_framework.exceptions import ValidationError
 from rest_framework.views import APIView
-# from rest_framework_simplejwt.tokens import RefreshToken
-
+import jwt
 from rest_framework.response import Response
 from rest_framework import status, generics, views
 from accounts.models import CustomUser
@@ -51,7 +50,7 @@ class RegisterView(generics.GenericAPIView):
 
         email_body = 'Hi {} Use below link to verify your email \n {}'.format(
             user.full_name, abs_url)
-        data = {'to_email': CustomUser.email, 'email_body': email_body,
+        data = {'to_email': user.email, 'email_body': email_body,
                 'email_subject': 'Verify your email'}
         Util.send_email(data)
 
@@ -69,13 +68,13 @@ class VerifyEmail(APIView):
     def get(self, request):
         token = request.GET.get('token')
         try:
-            # payload = jwt.decode(token, settings.SECRET_KEY)
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
             user = CustomUser.objects.get(id=payload['user_id'])
-            if not CustomUser.is_verified:
-                CustomUser.is_verified = True
-                CustomUser.save()
+            if not user.is_verified:
+                user.is_verified = True
+                user.save()
             return Response({'email': 'Successfully Verified'}, status=status.HTTP_201_CREATED)
-        except:
+        except Exception as e:
             return Response({'email': 'Invalid Token'}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -111,7 +110,7 @@ class ResetPasswordWithEmail(generics.GenericAPIView):
 
             email_body = 'Hi, \n Use below link to reset your password \n {}'.format(
                 abs_url)
-            data = {'to_email': CustomUser.email, 'email_body': email_body,
+            data = {'to_email': user.email, 'email_body': email_body,
                     'email_subject': 'Reset your password'}
             Util.send_email(data)
 
