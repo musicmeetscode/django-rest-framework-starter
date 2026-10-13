@@ -1,6 +1,6 @@
 # Deployment Guide
 
-**Host Nginx + Docker Frontend + Docker Backend**
+**Host Nginx + Docker Backend**
 
 This document describes how to deploy the application on a server that already hosts other websites using **host-level Nginx**, while keeping the backend fully containerized.
 
@@ -49,23 +49,37 @@ echo "YOUR_ACCESS_TOKEN" | docker login -u YOUR_USERNAME --password-stdin
 ## 2. Create and run redis container
 
 ```bash
-docker run -d --name redis --network app-network -p 6379:6379 --restart unless-stopped redis:alpine
+docker run -d --name redis --network app-network --restart unless-stopped redis:alpine
 ```
 
-### 3. Create migration folders on the root server
+## 3. Run the backend container
+
+Migrations, `collectstatic` and the admin user (from `ADMIN_EMAIL`/`ADMIN_PASSWORD`) are handled by
+`entrypoint.sh` on startup. Static files are served by WhiteNoise, so Nginx only needs to proxy.
 
 ```bash
-cd /home/main
-sudo mkdir -p migrations/accounts migrations/profiles migrations/api
-sudo touch migrations/__init__.py
-sudo touch migrations/api/__init__.py
-sudo touch migrations/accounts/__init__.py
-sudo touch migrations/profiles/__init__.py
+docker build -t api .
+docker run -d --name api --network app-network --restart unless-stopped \
+  --env-file .env.production \
+  -e DB_CHOICE=postgres -e DATABASE_URL=postgres://user:password@db-host:5432/dbname \
+  -e CELERY_BROKER_URL=redis://redis:6379/0 \
+  -v /home/main/media:/app/media \
+  -p 127.0.0.1:7080:8000 api
+
+# Celery worker (skips migrations)
+docker run -d --name api-worker --network app-network --restart unless-stopped \
+  --env-file .env.production -e RUN_MIGRATIONS=0 \
+  -e DB_CHOICE=postgres -e DATABASE_URL=postgres://user:password@db-host:5432/dbname \
+  -e CELERY_BROKER_URL=redis://redis:6379/0 \
+  api celery -A main worker --loglevel=info
 ```
+
+Production env must have `DEBUG=0`, a strong `SECRET_KEY`, and `ALLOWED_HOSTS` / `CSRF_TRUSTED_ORIGINS`
+set to your domain. Never commit the production env file.
 
 ---
 
-## 3. Host Nginx Config – API
+## 4. Host Nginx Config – API
 
 Create `/etc/nginx/sites-available/api.yourdomain.com`
 
@@ -80,12 +94,8 @@ server {
     listen 443 ssl;
     server_name api.yourdomain.com;
 
-    ssl_certificate etc/letsencrypt/live/api.yourdomain.com/fullchain.pem;
+    ssl_certificate /etc/letsencrypt/live/api.yourdomain.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/api.yourdomain.com/privkey.pem;
-
-    location /static/ {
-        alias /home/main/static/;
-    }
 
     location /media/ {
         alias /home/main/media/;
@@ -93,13 +103,16 @@ server {
 
     location / {
         proxy_pass http://127.0.0.1:7080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
 ```
 
 ---
 
-## 7. SSL Certificates
+## 5. SSL Certificates
 
 ```bash
 sudo certbot --nginx -d api.yourdomain.com
@@ -107,7 +120,7 @@ sudo certbot --nginx -d api.yourdomain.com
 
 ---
 
-## 8. Reload Nginx
+## 6. Reload Nginx
 
 ```bash
 sudo nginx -t
@@ -119,6 +132,5 @@ sudo systemctl reload nginx
 ## Summary
 
 - Host Nginx owns ports 80/443
-- Frontend container serves UI and proxies API
 - Backend container is internal only
 - Other host sites remain unaffected

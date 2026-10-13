@@ -1,8 +1,7 @@
 import os
 from celery import Celery
-import dotenv
 
-dotenv.read_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
+# Settings load .env themselves, so the worker sees the same config as the web app.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'main.settings')
 
 app = Celery('main')

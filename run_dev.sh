@@ -5,7 +5,7 @@ GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}Starting The Village API Development Environment...${NC}"
+echo -e "${BLUE}Starting the development environment (Celery worker, beat and Django)...${NC}"
 
 # Function to cleanup background processes on exit
 cleanup() {
